@@ -11,6 +11,7 @@ export default function ActivitiesPage() {
   } = useQuery("/activities", "activities");
 
   const { token } = useAuth();
+  console.log(activities, loading, error);
 
   const {
     mutate: addMutate,
@@ -28,33 +29,23 @@ export default function ActivitiesPage() {
     event.target.reset();
   };
 
-  const {
-    mutate: deleteMutate,
-    data: deletedActivity,
-    loading: deleting,
-    error: deleteError,
-  } = useMutation({
-    mutationFn: async (id) => {
-      const response = await fetch(`/activities/${id}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (!response.ok) {
-        throw new Error("Failed to delete");
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      invalidateTags(["activities"]);
-    },
-  });
+  function ActivityItem({ activity }) {
+    const { token } = useAuth();
+    const {
+      mutate: deleteActivity,
+      loading,
+      error,
+    } = useMutation("DELETE", `/activities/${activity.id}`, ["activities"]);
 
-  const deleteActivity = (id) => {
-    deleteMutate(id);
-  };
+    return (
+      <li>
+        <p key={activity.id}>
+          {activity.name}
+          {token && <button onClick={() => deleteActivity()}>Delete</button>}
+        </p>
+      </li>
+    );
+  }
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error loading activities.</p>;
@@ -64,16 +55,7 @@ export default function ActivitiesPage() {
       <h1>Activities</h1>
       {activities &&
         activities.map((activity) => {
-          return (
-            <p key={activity.id}>
-              {activity.name}
-              {token && (
-                <button onClick={() => deleteActivity(activity.id)}>
-                  Delete
-                </button>
-              )}
-            </p>
-          );
+          return <ActivityItem activity={activity} />;
         })}
       {token && (
         <form onSubmit={addActivity}>

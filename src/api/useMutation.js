@@ -20,6 +20,7 @@ export default function useMutation(method, resource, tagsToInvalidate) {
         method,
         body: JSON.stringify(body),
       });
+
       setData(result);
       invalidateTags(tagsToInvalidate);
     } catch (e) {
